@@ -28,43 +28,41 @@ def setup_db(app):
 def db_drop_and_create_all():
     db.drop_all()
     db.create_all()
-    # add one demo row which is helping in POSTMAN test
-    drink_1 = Drink((
-        id=1      
-        title='milky-water',
-        recipe="""[{"name": "water",
-                    "color": "blue", 
-                    "parts": 1
-                    },
-                    {"name": "milk",
-                    "color": "white", 
-                    "parts": 3
-                    }
-                  ]"""
+    # add two sample drinks
+    drink_1 = (Drink(
+                        id = 1,      
+                        title='milky-water',
+                        recipe="""[{"name": "water",
+                        "color": "blue", 
+                        "parts": 1
+                        },
+                        {"name": "milk",
+                        "color": "white", 
+                        "parts": 3
+                        }
+                                 ]"""
                     ))
-    drink_2 = Drink((
-        id=1      
-        title='cherry-lemon',
-        recipe="""[{"name": "cherry",
-                    "color": "red", 
-                    "parts": 2
-                    },
-                    {"name": "lemon",
-                    "color": "yellow", 
-                    "parts": 2
-                    }
-                  ]"""
+    drink_2 = (Drink(
+                        id = 2,      
+                        title='cherry-lemon',
+                        recipe="""[{"name": "cherry",
+                                    "color": "red", 
+                                    "parts": 2
+                                    },
+                                    {"name": "lemon",
+                                    "color": "yellow", 
+                                    "parts": 2
+                        }
+                                 ]"""
                     ))
 
     drink_1.insert()
     drink_2.insert()
 
-
 #----------------------------------------------------------------------------#
 # class Drink
 # a persistent drink entity, extends the base SQLAlchemy Model
 #----------------------------------------------------------------------------#
-
 
 class Drink(db.Model):
     # Autoincrementing, unique primary key
