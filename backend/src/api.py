@@ -80,7 +80,7 @@ def drinkdetail(payload):
 # This is an endpoint to post drinks
 # ---------------------------------------------------------------------------#
 
-@app.route('/drinks',  methods=['POST'])
+@app.route('/drinks',  methods=['POST'])    
 @requires_auth('post:drinks')
 def create(payload):
     
