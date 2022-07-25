@@ -46,61 +46,113 @@ def get_all_drinks(recipe_format):
     # Return formatted list of drinks
     return all_drinks_formatted
 
-# ROUTES
-'''
-@TODO implement endpoint
-    GET /drinks
-        it should be a public endpoint
-        it should contain only the drink.short() data representation
-    returns status code 200 and json {"success": True, "drinks": drinks} where drinks is the list of drinks
-        or appropriate status code indicating reason for failure
-'''
+#----------------------------------------------------------------------------#
+# The endpoints configuration
+#----------------------------------------------------------------------------#
 
+# ---------------------------------------------------------------------------#
+# TODO_complete
+# This is an endpoint to get all drinks
+# ---------------------------------------------------------------------------#
 
-'''
-@TODO implement endpoint
-    GET /drinks-detail
-        it should require the 'get:drinks-detail' permission
-        it should contain the drink.long() data representation
-    returns status code 200 and json {"success": True, "drinks": drinks} where drinks is the list of drinks
-        or appropriate status code indicating reason for failure
-'''
+@app.route('/drinks' , methods=['GET'])
+def drink():
+    return jsonify({
+    'success': True,
+    'drinks': get_all_drinks('short')
+    }), 200
 
+# ---------------------------------------------------------------------------#
+# TODO_complete
+# This is an endpoint to get drinks details
+# ---------------------------------------------------------------------------#
 
-'''
-@TODO implement endpoint
-    POST /drinks
-        it should create a new row in the drinks table
-        it should require the 'post:drinks' permission
-        it should contain the drink.long() data representation
-    returns status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the newly created drink
-        or appropriate status code indicating reason for failure
-'''
+@app.route('/drinks-detail',  methods=['GET'])
+@requires_auth('get:drinks-detail')
+def drinkdetail(payload):
+    return jsonify({
+    'success': True,
+    'drinks': get_all_drinks('long')
+    }), 200
 
+# ---------------------------------------------------------------------------#
+# TODO_complete
+# This is an endpoint to post drinks
+# ---------------------------------------------------------------------------#
 
-'''
-@TODO implement endpoint
-    PATCH /drinks/<id>
-        where <id> is the existing model id
-        it should respond with a 404 error if <id> is not found
-        it should update the corresponding row for <id>
-        it should require the 'patch:drinks' permission
-        it should contain the drink.long() data representation
-    returns status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the updated drink
-        or appropriate status code indicating reason for failure
-'''
+@app.route('/drinks',  methods=['POST'])
+@requires_auth('post:drinks')
+def create(payload):
+    
+    bdy = request.get_json()
+    new = Drink(title = bdy['title'], recipe = """{}""".format(bdy['recipe']))
+    
+    new.insert()
+    new.recipe = bdy['recipe']
+    return jsonify({
+    'success': True,
+    'drinks': Drink.long(new)
+    })
 
+# ---------------------------------------------------------------------------#
+# TODO_complete
+# This is an endpoint to update/edit existing drinks
+# ---------------------------------------------------------------------------#
+    
+@app.route('/drinks/<int:drink_id>',  methods=['PATCH'])
+@requires_auth('patch:drinks')
+def update(payload, drink_id):
+    
+    # Get body from request
+    bdy = request.get_json()
 
-'''
-@TODO implement endpoint
-    DELETE /drinks/<id>
-        where <id> is the existing model id
-        it should respond with a 404 error if <id> is not found
-        it should delete the corresponding row for <id>
-        it should require the 'delete:drinks' permission
-    returns status code 200 and json {"success": True, "delete": id} where id is the id of the deleted record
-        or appropriate status code indicating reason for failure
-'''
+    if not bdy:
+      abort(400, {'message': 'request does not contain a valid JSON body.'})
+    
+    # Find drink which should be updated by id
+    update = Drink.query.filter(Drink.id == drink_id).one_or_none()
+
+    # Check if and which fields should be updated
+    title = bdy.get('title', None)
+    recipe = bdy.get('recipe', None)
+    
+    # Depending on which fields are available, make apropiate updates
+    if title:
+        update.title = bdy['title']
+    
+    if recipe:
+        update.recipe = """{}""".format(bdy['recipe'])
+    
+    update.update()
+
+    return jsonify({
+    'success': True,
+    'drinks': [Drink.long(update)]
+    })
+
+# ---------------------------------------------------------------------------#
+# TODO_complete
+# This is an endpoint to delete existing drinks
+# ---------------------------------------------------------------------------#
+
+@app.route('/drinks/<int:drink_id>',  methods=['DELETE'])
+@requires_auth('delete:drinks')
+def delete_drinks(payload, drink_id):
+    if not drink_id:
+        abort(422, {'message': 'Please provide valid drink id'})
+
+    # Get drink with id
+    delete = Drink.query.filter(Drink.id == drink_id).one_or_none()
+
+    if not delete:
+        abort(404, {'message': 'Drink with id {} not found in database.'.format(drink_id)})
+     
+    delete.delete()
+    
+    return jsonify({
+    'success': True,
+    'delete': drink_id
+    })
 
 #----------------------------------------------------------------------------#
 # Error Handlers
