@@ -83,16 +83,18 @@ def drinkdetail(payload):
 @app.route('/drinks',  methods=['POST'])    
 @requires_auth('post:drinks')
 def create(payload):
-    
-    bdy = request.get_json()
-    new = Drink(title = bdy['title'], recipe = """{}""".format(bdy['recipe']))
-    
-    new.insert()
-    new.recipe = bdy['recipe']
+    bdy = request.get_json()  
+    recipe = bdy['recipe']
+                
+    title = bdy['title']
+    nw_drink = Drink(title=title, recipe=json.dumps(recipe))
+    nw_drink.insert()
+    drinks = [nw_drink.long()]
+
     return jsonify({
-    'success': True,
-    'drinks': Drink.long(new)
-    })
+                    'success': True,
+                    'drinks': drinks
+                   }), 200
 
 # ---------------------------------------------------------------------------#
 # TODO_complete
@@ -103,32 +105,32 @@ def create(payload):
 @requires_auth('patch:drinks')
 def update(payload, drink_id):
     
-    # Get body from request
     bdy = request.get_json()
+    print(bdy)
 
     if not bdy:
       abort(400, {'message': 'request does not contain a valid JSON body.'})
     
-    # Find drink which should be updated by id
-    update = Drink.query.filter(Drink.id == drink_id).one_or_none()
+    updateDrink = Drink.query.filter(Drink.id == drink_id).one_or_none()
+    if not updateDrink:
+            abort(404)
 
-    # Check if and which fields should be updated
     title = bdy.get('title', None)
     recipe = bdy.get('recipe', None)
     
-    # Depending on which fields are available, make apropiate updates
     if title:
-        update.title = bdy['title']
+        updateDrink.title = bdy['title']
     
     if recipe:
-        update.recipe = """{}""".format(bdy['recipe'])
+        updateDrink.recipe = json.dumps(bdy['recipe'])
     
-    update.update()
+    updateDrink.update()
+    drinks = [updateDrink.long()]
 
     return jsonify({
     'success': True,
-    'drinks': [Drink.long(update)]
-    })
+    'drinks': drinks
+    }), 200
 
 # ---------------------------------------------------------------------------#
 # TODO_complete
@@ -167,6 +169,14 @@ def unprocessable(error):
         "error": 422,
         "message": "unprocessable"
     }), 422
+
+@app.errorhandler(400)
+def bad_request(error):
+    return jsonify({
+        'success': False,
+        'error': 400,
+        'message': 'Bad Request'
+    }), 400
 
 #----------------------------------------------------------------------------#
 # TODO_complete 
